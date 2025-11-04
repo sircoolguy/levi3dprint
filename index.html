@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Levi 3D Print</title>
+  
+  <!-- Your CSS is now inside <style> tags -->
+  <style>
+    /* General layout */
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      color: white;
+      background: linear-gradient(180deg, #ff4500, #ff6600, #ffb347);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 30px;
+    }
+
+    .logo {
+      width: 160px;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Tabs */
+    nav {
+      display: flex;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px 15px;
+      border-radius: 10px;
+    }
+
+    nav .tab {
+      background: #0a3d62;
+      border: none;
+      color: white;
+      font-size: 16px;
+      padding: 8px 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    nav .tab:hover,
+    nav .tab.active {
+      background: #1e90ff;
+    }
+
+    /* Main content */
+    main {
+      text-align: center;
+      margin-top: 50px;
+      padding-bottom: 60px; /* Add padding to avoid footer overlap */
+    }
+
+    section {
+      display: none;
+    }
+
+    section.active {
+      display: block;
+    }
+
+    /* Gallery */
+    #gallery-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 25px;
+      min-height: 200px; /* Give it some height for loading state */
+    }
+    
+    #gallery-loading {
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.8);
+      /* This is where error messages will appear */
+    }
+    
+    .error-message {
+        color: #ff9999;
+        font-weight: bold;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    .image-wrapper {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      animation: fadeIn 0.5s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .image-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(255, 0, 0, 0.7);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      display: none; /* Controlled by JS */
+    }
+
+    .image-wrapper:hover .delete-btn {
+      display: block;
+    }
+
+    /* Upload area */
+    .upload-area {
+      margin: 20px;
+      display: none; /* Controlled by JS (owner mode) */
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #imageUpload {
+      font-size: 14px;
+    }
+
+    #uploadBtn {
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: none;
+      background: #1e90ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    #uploadBtn:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    
+    #upload-status {
+      height: 20px;
+      margin-top: 5px;
+      font-size: 14px;
+      color: #ffff99;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      position: absolute;
+      bottom: 5px;
+      width: 100%;
+      font-size: 13px;
+      color: white;
+    }
+
+    /* Owner button */
+    #ownerButton {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      padding: 4px 6px;
+      cursor: pointer;
+    }
+    
+    #ownerButton:disabled {
+        background: rgba(100, 100, 100, 0.2);
+        color: #aaa;
+        cursor: not-allowed;
+    }
+    
+    #userIdDisplay {
+      position: fixed;
+      bottom: 35px;
+      left: 10px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      font-family: monospace;
+    }
+
+    /* Wave background */
+    .wave {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 120%;
+      background: linear-gradient(180deg, #ff0000, #ff8c00, #fff, #2a5298);
+      clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+      z-index: -1;
+      animation: waveMotion 6s ease-in-out infinite alternate;
+    }
+
+    @keyframes waveMotion {
+      0% {
+        clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+      }
+      100% {
+        clip-path: polygon(0 0, 100% 0, 100% 95%, 0 90%);
+      }
+    }
+    
+    /* Custom Modal for prompts/alerts */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none; /* Show with JS */
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: #0a3d62;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+    
+    .modal-content p {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+    }
+    
+    .modal-content input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #1e90ff;
+      font-size: 16px;
+      box-sizing: border-box; /* Fix padding issue */
+    }
+    
+    .modal-buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .modal-buttons button {
+      flex: 1;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: none;
+      background: #1e90ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .modal-buttons button.cancel {
+      background: #555;
+    }
+    
+  </style>
+</head>
+<body>
+  <header>
+    <!-- Using a placeholder for your logo -->
+    <img src="https://placehold.co/160x100/FF6600/FFFFFF?text=Levi+3D" alt="Levi 3D Print Logo" class="logo" />
+    <nav>
+      <button class="tab active" data-tab="home">Home</button>
+      <button class="tab" data-tab="about">About</button>
+      <button class="tab" data-tab="gallery">Gallery</button>
+    </nav>
+  </header>
+
+  <!-- Wave background -->
+  <div class="wave"></div>
+
+  <main>
+    <section id="home" class="active">
+      <h1>Welcome to Levi 3D Print</h1>
+      <p>Custom 3D printed creations designed with care and creativity.
+      <br>best part: i can customize almost everything!</p>
+    </section>
+
+    <section id="about">
+      <h1>About Us</h1>
+      <p>At Levi 3D Print, we specialize in custom designs and innovative prints made for you.
+      <br>I can make earrings toys models cars keychains.
+      <br>Contact me on Facebook @ levi's custom 3d printing or email me at levitaba6@icloud.com</p>
+    </section>
+
+    <section id="gallery">
+      <h1>Gallery</h1>
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="imageUpload" accept="image/*" />
+        <button id="uploadBtn">Upload</button>
+      </div>
+      <div id="upload-status"></div>
+      <div id="gallery-container">
+        <!-- This p tag is now our main error/status display -->
+        <p id="gallery-loading">Loading gallery...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>@Levi3DPrint.com</p>
+  </footer>
+
+  <!-- Hidden owner button -->
+  <!-- It's disabled by default and will be enabled by JS when the database is ready -->
+  <button id="ownerButton" title="Owner Access" disabled>Loading...</button>
+  <div id="userIdDisplay"></div>
+
+  <!-- Custom Modal -->
+  <div class="modal-overlay" id="customModal">
+    <div class="modal-content">
+      <p id="modalMessage"></p>
+      <input type="password" id="modalInput" style="display: none;" />
+      <div class="modal-buttons">
+        <button id="modalConfirmBtn">OK</button>
+        <button id="modalCancelBtn" class="cancel" style="display: none;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 
+    This script polls for the global config variables.
+    Once found, it attaches them to 'window' and dispatches a
+    custom event to notify the module script below.
+    
+    **NEW:** Includes a 5-second timeout for local file execution.
+  -->
+  <script>
+    (function() {
+      let configFound = false;
+      let checkInterval;
+
+      // Start a 5-second timeout.
+      // If config isn't found by then, show an error.
+      const timeout = setTimeout(() => {
+        if (!configFound) {
+          clearInterval(checkInterval); // Stop polling
+          // We are likely running from a local file. Show an on-screen error.
+          const loadingEl = document.getElementById('gallery-loading');
+          const ownerBtn = document.getElementById('ownerButton');
+          if (loadingEl) {
+            loadingEl.innerHTML = `
+              <span class="error-message" style="color: #ffcccc; background: #a00; padding: 10px; border-radius: 5px;">
+                <strong>Error: App cannot start.</strong>
+                <br>
+                <small>This app must be run from its intended platform (not from a local file) to load database credentials.
+                <br>
+                Please run this code within the platform/editor.</small>
+              </span>
+            `;
+          }
+          if (ownerBtn) {
+            ownerBtn.textContent = "Load Failed";
+            ownerBtn.disabled = true;
+          }
+        }
+      }, 5000); // 5 seconds
+
+      function checkConfig() {
+        if (typeof __firebase_config !== 'undefined' && typeof __app_id !== 'undefined') {
+          // Config found!
+          configFound = true;
+          clearTimeout(timeout); // Cancel the 5-second timeout
+          clearInterval(checkInterval); // Stop polling
+
+          // console.log("Config variables found. Attaching to window.");
+          window.firebaseConfigString = __firebase_config;
+          window.appIdString = __app_id;
+          window.authTokenString = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+          
+          // Dispatch a custom event to tell the module script it's safe to load
+          document.dispatchEvent(new CustomEvent('firebaseConfigReady'));
+        }
+        // else: console.log("Config variables not ready, checking again...");
+      }
+      
+      // Start polling every 100ms
+      checkInterval = setInterval(checkConfig, 100);
+      checkConfig(); // Run first check immediately
+    })();
+  </script>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+      getFirestore, doc, addDoc, deleteDoc, onSnapshot, 
+      collection, setLogLevel 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // --- Element References ---
+    // Get element references early, so we can use them in error states
+    const ownerButton = document.getElementById("ownerButton");
+    const gallery = document.getElementById("gallery-container");
+    const galleryLoading = document.getElementById("gallery-loading");
+    const userIdDisplay = document.getElementById("userIdDisplay");
+
+    // --- Firebase Configuration ---
+    let firebaseConfig;
+    let appId = 'default-app-id';
+    let initialAuthToken = null;
+    let configError = false;
+
+    // --- App Variables ---
+    let db, auth;
+    let currentUserId = null;
+    let galleryCollectionRef = null;
+    let ownerMode = false;
+    let imageCache = new Map(); // To track images on the page
+
+    // --- Other Element References ---
+    const tabs = document.querySelectorAll(".tab");
+    const sections = document.querySelectorAll("section");
+    const uploadArea = document.getElementById("uploadArea");
+    const uploadInput = document.getElementById("imageUpload");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const uploadStatus = document.getElementById("upload-status");
+
+    // Modal elements
+    const customModal = document.getElementById("customModal");
+    const modalMessage = document.getElementById("modalMessage");
+    const modalInput = document.getElementById("modalInput");
+    const modalConfirmBtn = document.getElementById("modalConfirmBtn");
+    const modalCancelBtn = document.getElementById("modalCancelBtn");
+    
+    let modalConfirmCallback = null;
+    
+    // --- Helper to show errors on screen ---
+    function showOnScreenError(primaryMessage, details = "") {
+        if (galleryLoading) {
+            galleryLoading.innerHTML = `
+                <span class="error-message">
+                    <strong>Error:</strong> ${primaryMessage}
+                    <br>
+                    <small>${details}</small>
+                </span>
+            `;
+            galleryLoading.style.display = "block";
+        }
+        console.error(primaryMessage, details);
+    }
+
+    // --- Modal Functions (Replaces alert/prompt) ---
+    function showMessage(message) {
+      modalMessage.textContent = message;
+      modalInput.style.display = "none";
+      modalCancelBtn.style.display = "none";
+      modalConfirmBtn.textContent = "OK";
+      customModal.style.display = "flex";
+      
+      modalConfirmCallback = () => {
+        customModal.style.display = "none";
+      };
+    }
+    
+    function showPasswordPrompt(message, callback) {
+      modalMessage.textContent = message;
+      modalInput.value = "";
+      modalInput.style.display = "block";
+      modalCancelBtn.style.display = "inline-block";
+      modalConfirmBtn.textContent = "Sign In";
+      customModal.style.display = "flex";
+      
+      modalConfirmCallback = () => {
+        const password = modalInput.value;
+        customModal.style.display = "none";
+        callback(password);
+      };
+    }
+    
+    modalConfirmBtn.addEventListener("click", () => {
+      if (modalConfirmCallback) {
+        modalConfirmCallback();
+      }
+    });
+    
+    modalCancelBtn.addEventListener("click", () => {
+      customModal.style.display = "none";
+    });
+
+    // ======= Tabs =======
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        sections.forEach(s => s.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    // ======= Owner system =======
+    ownerButton.addEventListener("click", () => {
+      if (!ownerMode) {
+        showPasswordPrompt("Enter owner password:", (password) => {
+          // This was the typo: password == "..." should be password === "..."
+          if (password === "custom3dlevi") { 
+            ownerMode = true;
+            showMessage("Owner mode activated!");
+            uploadArea.style.display = "flex";
+          } else {
+            showMessage("Incorrect password! Not signed in.");
+            ownerMode = false;
+            uploadArea.style.display = "none";
+          }
+          updateDeleteButtons();
+        });
+      } else {
+        ownerMode = false;
+        showMessage("Signed out of Owner mode.");
+        uploadArea.style.display = "none";
+        updateDeleteButtons();
+      }
+    });
+    
+    // Delete button visibility
+    function updateDeleteButtons() {
+      const deleteButtons = document.querySelectorAll(".delete-btn");
+      deleteButtons.forEach(btn => {
+        btn.style.display = ownerMode ? "block" : "none";
+      });
+    }
+
+    // ======= Gallery Functions (Now with Firestore) =======
+
+    // This function adds an image to the page
+    function addImageToGallery(docId, src) {
+      // Hide the "no images" message if it's visible
+      if (galleryLoading.style.display === "block" && imageCache.size === 0) {
+        galleryLoading.style.display = "none";
+      }
+    
+      const wrapper = document.createElement("div");
+      wrapper.classList.add("image-wrapper");
+      wrapper.setAttribute('data-doc-id', docId); // Store doc ID
+      imageCache.set(docId, wrapper); // Add to cache
+
+      const img = document.createElement("img");
+      img.src = src;
+      img.onerror = () => {
+          img.src = 'https://placehold.co/200x200/FF0000/FFFFFF?text=Error';
+          console.error(`Failed to load image from src: ${src.substring(0, 50)}...`);
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.innerText = "×";
+      deleteBtn.classList.add("delete-btn");
+      deleteBtn.style.display = ownerMode ? "block" : "none";
+
+      deleteBtn.addEventListener("click", async () => {
+        try {
+          // Delete from Firestore
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'galleryImages', docId);
+          await deleteDoc(docRef);
+          // The onSnapshot listener will handle removing it from the DOM
+          console.log("Delete triggered for doc:", docId);
+        } catch (error) {
+          console.error("Error deleting document: ", error);
+          showMessage("Error: Could not delete image.");
+        }
+      });
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(deleteBtn);
+      gallery.appendChild(wrapper);
+    }
+    
+    // This function removes an image from the page
+    function removeImageFromGallery(docId) {
+      if (imageCache.has(docId)) {
+        imageCache.get(docId).remove(); // Remove from DOM
+        imageCache.delete(docId); // Remove from cache
+      }
+      
+      // If last image was removed, show "no images" message
+      if (imageCache.size === 0) {
+        galleryLoading.textContent = "No images in gallery yet. Upload one!";
+        galleryLoading.style.display = "block";
+      }
+    }
+
+    // Upload button click listener
+    uploadBtn.addEventListener("click", () => {
+      if (!ownerMode) {
+        showMessage("You must be in Owner mode to upload!");
+        return;
+      }
+      if (!galleryCollectionRef) {
+        // This check prevents uploading before the database is ready
+        showMessage("Database not ready, please wait.");
+        return;
+      }
+
+      const file = uploadInput.files[0];
+      if (!file) return;
+
+      // Check file size (Firestore doc limit is 1MB)
+      // Base64 encoding adds ~33% overhead, so 750KB is a safe limit.
+      if (file.size > 750000) {
+        showMessage("Error: Image is too large (max 750KB). Please resize it and try again.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const src = e.target.result; // This is the Base64 data URL
+        
+        uploadBtn.disabled = true;
+        uploadStatus.textContent = "Uploading... please wait.";
+        
+        try {
+          // Add a new document with the image data to Firestore
+          await addDoc(galleryCollectionRef, {
+            src: src,
+            uploadedAt: new Date()
+          });
+          // onSnapshot will automatically add it to the gallery
+          uploadStatus.textContent = "Upload successful!";
+          uploadInput.value = null; // Clear file input
+        } catch (error) {
+          console.error("Error adding document: ", error);
+          showMessage("Error: Upload failed. The file might be too large.");
+          uploadStatus.textContent = "Upload failed.";
+        } finally {
+          uploadBtn.disabled = false;
+          setTimeout(() => { uploadStatus.textContent = ""; }, 3000);
+        }
+      };
+      
+      reader.onerror = () => {
+          showMessage("Error reading file.");
+      };
+      
+      reader.readAsDataURL(file);
+    });
+    
+    // --- Config Loading ---
+    // This is the new entry point for the app
+    function loadConfigAndInit() {
+      try {
+        // Read from the window object set by the script above
+        if (window.firebaseConfigString) {
+          firebaseConfig = JSON.parse(window.firebaseConfigString);
+        } else {
+          throw new Error("window.firebaseConfigString not found");
+        }
+        
+        if (window.appIdString) {
+          appId = window.appIdString;
+        } else {
+          throw new Error("window.appIdString not found");
+        }
+        
+        if (window.authTokenString) {
+          initialAuthToken = window.authTokenString;
+        }
+
+        if (!firebaseConfig) {
+             throw new Error("Firebase config is empty or invalid after parsing");
+        }
+        
+        // If config is loaded, proceed to initialize Firebase
+        initializeFirebase();
+
+      } catch (e) {
+        console.error("Critical Error: Could not parse Firebase config.", e);
+        // Set to fallback to show the error
+        firebaseConfig = { apiKey: "INVALID_CONFIG", authDomain: "...", projectId: "..." };
+        configError = true;
+        
+        // Display a very clear error to the user
+        showOnScreenError(
+            "The app's configuration is missing or invalid.",
+            `Please reload the page. (Details: ${e.message})`
+        );
+        if (ownerButton) {
+            ownerButton.disabled = true;
+            ownerButton.textContent = "Config Error";
+        }
+      }
+    }
+    
+    // --- Firebase Initialization ---
+    async function initializeFirebase() {
+      // If config failed to parse, don't even try to init
+      if (configError) {
+        console.log("Skipping Firebase init due to config error.");
+        return; 
+      }
+
+      try {
+        setLogLevel('debug'); // Enable debug logging
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            console.log("User is signed in:", user.uid);
+            currentUserId = user.uid;
+            userIdDisplay.textContent = `ID: ${currentUserId.substring(0, 8)}...`;
+            
+            // Set up Firestore listener *after* user is authenticated
+            setupRealtimeListener();
+
+            // Now that auth is ready and listener is being set up, enable the owner button.
+            ownerButton.disabled = false;
+            ownerButton.textContent = "Owner";
+
+          } else {
+            console.log("User is signed out or auth failed.");
+            currentUserId = null;
+            userIdDisplay.textContent = "Not signed in";
+            
+            // If auth fails or user signs out, disable owner features
+            ownerButton.disabled = true;
+            ownerButton.textContent = "Auth Failed";
+            showOnScreenError("Authentication Failed.", "You are not signed in. Gallery cannot be loaded.");
+            ownerMode = false;
+            uploadArea.style.display = "none";
+            updateDeleteButtons();
+          }
+        });
+
+        // Try to sign in
+        if (initialAuthToken) {
+          console.log("Signing in with custom token...");
+          await signInWithCustomToken(auth, initialAuthToken);
+        } else {
+          console.log("Signing in anonymously...");
+          await signInAnonymously(auth);
+        }
+
+      } catch (error) {
+        console.error("Firebase Initialization Error:", error);
+        showOnScreenError("Error connecting to app.", error.message);
+        // Update button text to show the init failed
+        ownerButton.disabled = true;
+        ownerButton.textContent = "Init Error";
+      }
+    }
+
+    // --- Firestore Real-time Listener ---
+    function setupRealtimeListener() {
+      if (!db || !currentUserId) {
+        showOnScreenError("Cannot load gallery.", "Database or User ID not ready.");
+        return;
+      }
+
+      // This is the *collection* that holds all gallery images
+      galleryCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'galleryImages');
+      console.log("Listening for changes in:", galleryCollectionRef.path);
+
+      onSnapshot(galleryCollectionRef, (snapshot) => {
+        
+        if (snapshot.empty) {
+            // The gallery is officially empty.
+            // Show the "no images" message.
+            galleryLoading.textContent = "No images in gallery yet. Upload one!";
+            galleryLoading.style.display = "block";
+            // Clear any old images
+            gallery.querySelectorAll('.image-wrapper').forEach(w => w.remove());
+            imageCache.clear();
+        } else {
+            // The gallery has images. Hide the loading/empty message.
+            galleryLoading.style.display = "none";
+        }
+        
+        snapshot.docChanges().forEach((change) => {
+          const docId = change.doc.id;
+          const docData = change.doc.data();
+
+          if (change.type === "added") {
+            // This console.Flog was a typo, now fixed
+            console.log("Image added:", docId); 
+            if (!imageCache.has(docId)) {
+                addImageToGallery(docId, docData.src);
+            }
+          }
+          if (change.type === "removed") {
+            console.log("Image removed:", docId);
+            removeImageFromGallery(docId);
+          }
+          // Note: "modified" is not handled
+        });
+        
+        // Ensure delete buttons are correctly shown/hidden for owner
+        updateDeleteButtons();
+
+      }, (error) => {
+        console.error("Snapshot listener error:", error);
+        // THIS IS THE CRITICAL PART - SHOW THE ERROR ON-SCREEN
+        showOnScreenError(
+            "Permission Denied or Connection Lost.",
+            `The gallery cannot be loaded. (Code: ${error.code})`
+        );
+      });
+    }
+
+    // Start the application by listening for the config to be ready
+    document.addEventListener('firebaseConfigReady', loadConfigAndInit);
+
+  </script>
+</body>
+</html>
+
