@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Levi 3D Print</title>
   
-  <!-- Your CSS is now inside <style> tags -->
   <style>
     /* General layout */
     body {
@@ -87,7 +86,6 @@
     #gallery-loading {
       font-size: 1.2rem;
       color: rgba(255, 255, 255, 0.8);
-      /* This is where error messages will appear */
     }
     
     .error-message {
@@ -293,7 +291,6 @@
 </head>
 <body>
   <header>
-    <!-- Using a placeholder for your logo -->
     <img src="https://placehold.co/160x100/FF6600/FFFFFF?text=Levi+3D" alt="Levi 3D Print Logo" class="logo" />
     <nav>
       <button class="tab active" data-tab="home">Home</button>
@@ -327,7 +324,6 @@
       </div>
       <div id="upload-status"></div>
       <div id="gallery-container">
-        <!-- This p tag is now our main error/status display -->
         <p id="gallery-loading">Loading gallery...</p>
       </div>
     </section>
@@ -337,8 +333,6 @@
     <p>@Levi3DPrint.com</p>
   </footer>
 
-  <!-- Hidden owner button -->
-  <!-- It's disabled by default and will be enabled by JS when the database is ready -->
   <button id="ownerButton" title="Owner Access" disabled>Loading...</button>
   <div id="userIdDisplay"></div>
 
@@ -354,34 +348,50 @@
     </div>
   </div>
 
-  <!-- 
-    The polling script has been removed from here.
-    All logic is now combined into the single module script below
-    to prevent race conditions.
-  -->
-
   <!-- Firebase SDKs -->
-  <script type="module">
+    <script type="module">
     // Import Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { 
       getFirestore, doc, addDoc, deleteDoc, onSnapshot, 
       collection, setLogLevel 
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+    // ------------------------------------------------------------------
+    // STEP 1: PASTE YOUR FIREBASE CONFIG HERE
+    // ------------------------------------------------------------------
+    //
+    // Your config has been added!
+    //
+    const firebaseConfig = {
+      apiKey: "AIzaSyAWYZGZ8nvgSAgpQ60OsLqathduMM2CbQE",
+      authDomain: "levi3dprint-94bb0.firebaseapp.com",
+      projectId: "levi3dprint-94bb0",
+      storageBucket: "levi3dprint-94bb0.firebasestorage.app",
+      messagingSenderId: "1044564863427",
+      appId: "1:1044564863427:web:37017271e5972aee7c3576",
+      measurementId: "G-08JB2G438T"
+    };
+    //
+    // ------------------------------------------------------------------
+
     // --- Element References ---
-    // Get element references early, so we can use them in error states
     const ownerButton = document.getElementById("ownerButton");
     const gallery = document.getElementById("gallery-container");
     const galleryLoading = document.getElementById("gallery-loading");
     const userIdDisplay = document.getElementById("userIdDisplay");
-
-    // --- Firebase Configuration ---
-    let firebaseConfig;
-    let appId = 'default-app-id';
-    let initialAuthToken = null;
-    let configError = false;
+    const tabs = document.querySelectorAll(".tab");
+    const sections = document.querySelectorAll("section");
+    const uploadArea = document.getElementById("uploadArea");
+    const uploadInput = document.getElementById("imageUpload");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const uploadStatus = document.getElementById("upload-status");
+    const customModal = document.getElementById("customModal");
+    const modalMessage = document.getElementById("modalMessage");
+    const modalInput = document.getElementById("modalInput");
+    const modalConfirmBtn = document.getElementById("modalConfirmBtn");
+    const modalCancelBtn = document.getElementById("modalCancelBtn");
 
     // --- App Variables ---
     let db, auth;
@@ -389,22 +399,6 @@
     let galleryCollectionRef = null;
     let ownerMode = false;
     let imageCache = new Map(); // To track images on the page
-
-    // --- Other Element References ---
-    const tabs = document.querySelectorAll(".tab");
-    const sections = document.querySelectorAll("section");
-    const uploadArea = document.getElementById("uploadArea");
-    const uploadInput = document.getElementById("imageUpload");
-    const uploadBtn = document.getElementById("uploadBtn");
-    const uploadStatus = document.getElementById("upload-status");
-
-    // Modal elements
-    const customModal = document.getElementById("customModal");
-    const modalMessage = document.getElementById("modalMessage");
-    const modalInput = document.getElementById("modalInput");
-    const modalConfirmBtn = document.getElementById("modalConfirmBtn");
-    const modalCancelBtn = document.getElementById("modalCancelBtn");
-    
     let modalConfirmCallback = null;
     
     // --- Helper to show errors on screen ---
@@ -474,7 +468,6 @@
     ownerButton.addEventListener("click", () => {
       if (!ownerMode) {
         showPasswordPrompt("Enter owner password:", (password) => {
-          // This was the typo: password == "..." should be password === "..."
           if (password === "custom3dlevi") { 
             ownerMode = true;
             showMessage("Owner mode activated!");
@@ -506,7 +499,6 @@
 
     // This function adds an image to the page
     function addImageToGallery(docId, src) {
-      // Hide the "no images" message if it's visible
       if (galleryLoading.style.display === "block" && imageCache.size === 0) {
         galleryLoading.style.display = "none";
       }
@@ -520,7 +512,6 @@
       img.src = src;
       img.onerror = () => {
           img.src = 'https://placehold.co/200x200/FF0000/FFFFFF?text=Error';
-          console.error(`Failed to load image from src: ${src.substring(0, 50)}...`);
       };
 
       const deleteBtn = document.createElement("button");
@@ -530,11 +521,8 @@
 
       deleteBtn.addEventListener("click", async () => {
         try {
-          // Delete from Firestore
-          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'galleryImages', docId);
+          const docRef = doc(db, 'galleryImages', docId);
           await deleteDoc(docRef);
-          // The onSnapshot listener will handle removing it from the DOM
-          console.log("Delete triggered for doc:", docId);
         } catch (error) {
           console.error("Error deleting document: ", error);
           showMessage("Error: Could not delete image.");
@@ -553,7 +541,6 @@
         imageCache.delete(docId); // Remove from cache
       }
       
-      // If last image was removed, show "no images" message
       if (imageCache.size === 0) {
         galleryLoading.textContent = "No images in gallery yet. Upload one!";
         galleryLoading.style.display = "block";
@@ -567,7 +554,6 @@
         return;
       }
       if (!galleryCollectionRef) {
-        // This check prevents uploading before the database is ready
         showMessage("Database not ready, please wait.");
         return;
       }
@@ -575,8 +561,6 @@
       const file = uploadInput.files[0];
       if (!file) return;
 
-      // Check file size (Firestore doc limit is 1MB)
-      // Base64 encoding adds ~33% overhead, so 750KB is a safe limit.
       if (file.size > 750000) {
         showMessage("Error: Image is too large (max 750KB). Please resize it and try again.");
         return;
@@ -595,7 +579,6 @@
             src: src,
             uploadedAt: new Date()
           });
-          // onSnapshot will automatically add it to the gallery
           uploadStatus.textContent = "Upload successful!";
           uploadInput.value = null; // Clear file input
         } catch (error) {
@@ -615,51 +598,21 @@
       reader.readAsDataURL(file);
     });
     
-    // --- Config Loading ---
-    // This function is now called by the new poller below
-    // (This function was previously named loadConfigAndInit)
-    function initializeAppAndFirebase() {
-      try {
-        // Now that we're inside the poller, we know these globals exist.
-        firebaseConfig = JSON.parse(__firebase_config);
-        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        if (!firebaseConfig) {
-             throw new Error("Firebase config is empty or invalid after parsing");
-        }
-        
-        // If config is loaded, proceed to initialize Firebase
-        initializeFirebase();
-
-      } catch (e) {
-        console.error("Critical Error: Could not parse Firebase config.", e);
-        // Set to fallback to show the error
-        firebaseConfig = { apiKey: "INVALID_CONFIG", authDomain: "...", projectId: "..." };
-        configError = true;
-        
-        // Display a very clear error to the user
-        showOnScreenError(
-            "The app's configuration is missing or invalid.",
-            `Please reload the page. (Details: ${e.message})`
-        );
-        if (ownerButton) {
-            ownerButton.disabled = true;
-            ownerButton.textContent = "Config Error";
-        }
-      }
-    }
-    
     // --- Firebase Initialization ---
     async function initializeFirebase() {
-      // If config failed to parse, don't even try to init
-      if (configError) {
-        console.log("Skipping Firebase init due to config error.");
-        return; 
+      // Check if the user has pasted their config
+      if (firebaseConfig.apiKey === "PASTE_YOUR_API_KEY_HERE") {
+          showOnScreenError(
+              "Configuration Missing",
+              "You must paste your own 'firebaseConfig' object into the index.html file to connect to the database."
+          );
+          ownerButton.disabled = true;
+          ownerButton.textContent = "Config Error";
+          return;
       }
 
       try {
-        setLogLevel('debug'); // Enable debug logging
+        setLogLevel('debug');
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
         auth = getAuth(app);
@@ -670,10 +623,8 @@
             currentUserId = user.uid;
             userIdDisplay.textContent = `ID: ${currentUserId.substring(0, 8)}...`;
             
-            // Set up Firestore listener *after* user is authenticated
             setupRealtimeListener();
 
-            // Now that auth is ready and listener is being set up, enable the owner button.
             ownerButton.disabled = false;
             ownerButton.textContent = "Owner";
 
@@ -682,7 +633,6 @@
             currentUserId = null;
             userIdDisplay.textContent = "Not signed in";
             
-            // If auth fails or user signs out, disable owner features
             ownerButton.disabled = true;
             ownerButton.textContent = "Auth Failed";
             showOnScreenError("Authentication Failed.", "You are not signed in. Gallery cannot be loaded.");
@@ -692,19 +642,22 @@
           }
         });
 
-        // Try to sign in
-        if (initialAuthToken) {
-          console.log("Signing in with custom token...");
-          await signInWithCustomToken(auth, initialAuthToken);
-        } else {
-          console.log("Signing in anonymously...");
-          await signInAnonymously(auth);
-        }
+        // Sign in anonymously
+        console.log("Signing in anonymously...");
+        await signInAnonymously(auth);
 
       } catch (error) {
         console.error("Firebase Initialization Error:", error);
-        showOnScreenError("Error connecting to app.", error.message);
-        // Update button text to show the init failed
+        
+        if (error.code === 'auth/configuration-not-found') {
+            showOnScreenError(
+                "ACTION REQUIRED: Authentication not enabled.",
+                "Please go to your Firebase project > Build > Authentication > Sign-in method > and enable the 'Anonymous' provider."
+            );
+        } else {
+            showOnScreenError("Error connecting to app.", error.message);
+        }
+        
         ownerButton.disabled = true;
         ownerButton.textContent = "Init Error";
       }
@@ -716,23 +669,20 @@
         showOnScreenError("Cannot load gallery.", "Database or User ID not ready.");
         return;
       }
-
-      // This is the *collection* that holds all gallery images
-      galleryCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'galleryImages');
+      
+      // I've simplified this path. This will now look for a collection
+      // named 'galleryImages' at the root of your database.
+      galleryCollectionRef = collection(db, 'galleryImages');
       console.log("Listening for changes in:", galleryCollectionRef.path);
 
       onSnapshot(galleryCollectionRef, (snapshot) => {
         
         if (snapshot.empty) {
-            // The gallery is officially empty.
-            // Show the "no images" message.
             galleryLoading.textContent = "No images in gallery yet. Upload one!";
             galleryLoading.style.display = "block";
-            // Clear any old images
             gallery.querySelectorAll('.image-wrapper').forEach(w => w.remove());
             imageCache.clear();
         } else {
-            // The gallery has images. Hide the loading/empty message.
             galleryLoading.style.display = "none";
         }
         
@@ -741,25 +691,19 @@
           const docData = change.doc.data();
 
           if (change.type === "added") {
-            // This console.Flog was a typo, now fixed
-            console.log("Image added:", docId); 
             if (!imageCache.has(docId)) {
                 addImageToGallery(docId, docData.src);
             }
           }
           if (change.type === "removed") {
-            console.log("Image removed:", docId);
             removeImageFromGallery(docId);
           }
-          // Note: "modified" is not handled
         });
         
-        // Ensure delete buttons are correctly shown/hidden for owner
         updateDeleteButtons();
 
       }, (error) => {
         console.error("Snapshot listener error:", error);
-        // THIS IS THE CRITICAL PART - SHOW THE ERROR ON-SCREEN
         showOnScreenError(
             "Permission Denied or Connection Lost.",
             `The gallery cannot be loaded. (Code: ${error.code})`
@@ -767,48 +711,10 @@
       });
     }
 
-    // --- NEW APP ENTRY POINT ---
-    // This single poller replaces the two-script system
-    function startAppPoller() {
-        let configFound = false;
-        let attempts = 0;
-        const maxAttempts = 50; // 50 * 100ms = 5 seconds
-
-        const interval = setInterval(() => {
-            if (typeof __firebase_config !== 'undefined' && typeof __app_id !== 'undefined') {
-                // Config found!
-                configFound = true;
-                clearInterval(interval);
-                
-                // All good, initialize the app
-                initializeAppAndFirebase();
-
-            } else {
-                // Config not found yet
-                attempts++;
-                if (attempts > maxAttempts) {
-                    // Timeout!
-                    clearInterval(interval);
-                    if (!configFound) {
-                        // This is the "local file" error
-                        showOnScreenError(
-                            "Error: App cannot start.",
-                            "This app must be run from its intended platform (not from a local file) to load database credentials.\nPlease run this code within the platform/editor."
-                        );
-                        if (ownerButton) {
-                            ownerButton.textContent = "Load Failed";
-                            ownerButton.disabled = true;
-                        }
-                    }
-                }
-            }
-        }, 100); // Poll every 100ms
-    }
-    
-    // Start the whole app
-    startAppPoller();
+    // --- START THE APP ---
+    // We no longer need to poll, just run the init function
+    initializeFirebase();
 
   </script>
 </body>
 </html>
-
