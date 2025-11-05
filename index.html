@@ -355,66 +355,10 @@
   </div>
 
   <!-- 
-    This script polls for the global config variables.
-    Once found, it attaches them to 'window' and dispatches a
-    custom event to notify the module script below.
-    
-    **NEW:** Includes a 5-second timeout for local file execution.
+    The polling script has been removed from here.
+    All logic is now combined into the single module script below
+    to prevent race conditions.
   -->
-  <script>
-    (function() {
-      let configFound = false;
-      let checkInterval;
-
-      // Start a 5-second timeout.
-      // If config isn't found by then, show an error.
-      const timeout = setTimeout(() => {
-        if (!configFound) {
-          clearInterval(checkInterval); // Stop polling
-          // We are likely running from a local file. Show an on-screen error.
-          const loadingEl = document.getElementById('gallery-loading');
-          const ownerBtn = document.getElementById('ownerButton');
-          if (loadingEl) {
-            loadingEl.innerHTML = `
-              <span class="error-message" style="color: #ffcccc; background: #a00; padding: 10px; border-radius: 5px;">
-                <strong>Error: App cannot start.</strong>
-                <br>
-                <small>This app must be run from its intended platform (not from a local file) to load database credentials.
-                <br>
-                Please run this code within the platform/editor.</small>
-              </span>
-            `;
-          }
-          if (ownerBtn) {
-            ownerBtn.textContent = "Load Failed";
-            ownerBtn.disabled = true;
-          }
-        }
-      }, 5000); // 5 seconds
-
-      function checkConfig() {
-        if (typeof __firebase_config !== 'undefined' && typeof __app_id !== 'undefined') {
-          // Config found!
-          configFound = true;
-          clearTimeout(timeout); // Cancel the 5-second timeout
-          clearInterval(checkInterval); // Stop polling
-
-          // console.log("Config variables found. Attaching to window.");
-          window.firebaseConfigString = __firebase_config;
-          window.appIdString = __app_id;
-          window.authTokenString = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-          
-          // Dispatch a custom event to tell the module script it's safe to load
-          document.dispatchEvent(new CustomEvent('firebaseConfigReady'));
-        }
-        // else: console.log("Config variables not ready, checking again...");
-      }
-      
-      // Start polling every 100ms
-      checkInterval = setInterval(checkConfig, 100);
-      checkConfig(); // Run first check immediately
-    })();
-  </script>
 
   <!-- Firebase SDKs -->
   <script type="module">
@@ -672,25 +616,14 @@
     });
     
     // --- Config Loading ---
-    // This is the new entry point for the app
-    function loadConfigAndInit() {
+    // This function is now called by the new poller below
+    // (This function was previously named loadConfigAndInit)
+    function initializeAppAndFirebase() {
       try {
-        // Read from the window object set by the script above
-        if (window.firebaseConfigString) {
-          firebaseConfig = JSON.parse(window.firebaseConfigString);
-        } else {
-          throw new Error("window.firebaseConfigString not found");
-        }
-        
-        if (window.appIdString) {
-          appId = window.appIdString;
-        } else {
-          throw new Error("window.appIdString not found");
-        }
-        
-        if (window.authTokenString) {
-          initialAuthToken = window.authTokenString;
-        }
+        // Now that we're inside the poller, we know these globals exist.
+        firebaseConfig = JSON.parse(__firebase_config);
+        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         if (!firebaseConfig) {
              throw new Error("Firebase config is empty or invalid after parsing");
@@ -834,8 +767,46 @@
       });
     }
 
-    // Start the application by listening for the config to be ready
-    document.addEventListener('firebaseConfigReady', loadConfigAndInit);
+    // --- NEW APP ENTRY POINT ---
+    // This single poller replaces the two-script system
+    function startAppPoller() {
+        let configFound = false;
+        let attempts = 0;
+        const maxAttempts = 50; // 50 * 100ms = 5 seconds
+
+        const interval = setInterval(() => {
+            if (typeof __firebase_config !== 'undefined' && typeof __app_id !== 'undefined') {
+                // Config found!
+                configFound = true;
+                clearInterval(interval);
+                
+                // All good, initialize the app
+                initializeAppAndFirebase();
+
+            } else {
+                // Config not found yet
+                attempts++;
+                if (attempts > maxAttempts) {
+                    // Timeout!
+                    clearInterval(interval);
+                    if (!configFound) {
+                        // This is the "local file" error
+                        showOnScreenError(
+                            "Error: App cannot start.",
+                            "This app must be run from its intended platform (not from a local file) to load database credentials.\nPlease run this code within the platform/editor."
+                        );
+                        if (ownerButton) {
+                            ownerButton.textContent = "Load Failed";
+                            ownerButton.disabled = true;
+                        }
+                    }
+                }
+            }
+        }, 100); // Poll every 100ms
+    }
+    
+    // Start the whole app
+    startAppPoller();
 
   </script>
 </body>
