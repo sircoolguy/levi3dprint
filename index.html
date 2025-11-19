@@ -312,6 +312,25 @@
       color: white;
       opacity: 1;
     }
+    
+    /* Home Contact Button */
+    #generalQuoteBtn {
+      margin-top: 20px;
+      padding: 12px 25px;
+      background: #1e90ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #generalQuoteBtn:hover {
+      background: #007bff;
+    }
+
 
     /* Wave background */
     .wave {
@@ -361,18 +380,72 @@
 
     .lightbox-content {
       max-width: 90%;
-      max-height: 80vh;
+      max-height: 70vh;
       object-fit: contain;
       border: 2px solid #fff;
       border-radius: 5px;
+      margin-bottom: 10px;
     }
 
     .lightbox-caption {
       color: white;
-      margin-top: 15px;
+      margin-top: 5px;
       font-size: 1.5rem;
       font-weight: bold;
       text-align: center;
+    }
+
+    .lightbox-actions {
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    #orderButton {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s;
+        text-decoration: none; /* For mailto link style */
+        display: inline-block;
+    }
+    
+    #orderButton:hover {
+        background: #218838;
+    }
+
+    /* Order Form Modal Styling */
+    .order-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        text-align: left;
+        width: 100%;
+    }
+    
+    .order-form label {
+        color: #ccc;
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+    
+    .order-form input, .order-form textarea {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #555;
+        background: #333;
+        color: white;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .order-form textarea {
+        resize: vertical;
+        min-height: 80px;
     }
 
     .close-lightbox {
@@ -498,6 +571,8 @@
       <h1>Welcome to Levi's custom 3d printing</h1>
       <p>Custom 3D printed creations designed with care and creativity.
       <br>The best part: I can customize almost everything!</p>
+      <!-- NEW: Home Button -->
+      <button id="generalQuoteBtn">Start a Custom Order</button>
     </section>
 
     <section id="about">
@@ -542,6 +617,12 @@
     <span class="close-lightbox">&times;</span>
     <img class="lightbox-content" id="lightboxImg">
     <div id="lightboxCaption" class="lightbox-caption"></div>
+    
+    <!-- Order Button Area -->
+    <div class="lightbox-actions">
+        <button id="orderButton">Request Order / Quote</button>
+    </div>
+
     <a class="prev" id="lightboxPrev">&#10094;</a>
     <a class="next" id="lightboxNext">&#10095;</a>
   </div>
@@ -551,10 +632,25 @@
     <div class="modal-content">
       <h2 id="modalTitle">Modal Title</h2>
       <p id="modalMessage">This is the modal message.</p>
+      
+      <!-- Regular Input (Password) -->
       <input type="password" id="modalInput" class="modal-input" style="display: none;" />
+      
+      <!-- Order Form (Hidden by default) -->
+      <div id="orderForm" class="order-form" style="display: none;">
+          <label>Your Name:</label>
+          <input type="text" id="orderName" placeholder="John Doe" />
+          
+          <label>Your Email (Optional):</label>
+          <input type="email" id="orderEmail" placeholder="john@example.com" />
+          
+          <label>Notes / Customization:</label>
+          <textarea id="orderNotes" placeholder="I would like this in blue..."></textarea>
+      </div>
+
       <div class="modal-buttons">
         <button id="modalCancel" class="cancel">Cancel</button>
-        <button id="modalConfirm" class="confirm">OK</button>
+        <button id="modalConfirm" class="confirm">Draft Email</button>
       </div>
     </div>
   </div>
@@ -606,6 +702,10 @@
     const modalInput = document.getElementById("modalInput");
     const modalCancel = document.getElementById("modalCancel");
     const modalConfirm = document.getElementById("modalConfirm");
+    const orderForm = document.getElementById("orderForm"); 
+    const orderName = document.getElementById("orderName"); 
+    const orderEmail = document.getElementById("orderEmail"); 
+    const orderNotes = document.getElementById("orderNotes"); 
     
     const changeLogoButton = document.getElementById("changeLogoButton");
     const logoUploadInput = document.getElementById("logoUploadInput");
@@ -619,6 +719,10 @@
     const closeLightbox = document.querySelector(".close-lightbox");
     const lightboxPrev = document.getElementById("lightboxPrev");
     const lightboxNext = document.getElementById("lightboxNext");
+    const orderButton = document.getElementById("orderButton"); 
+    
+    // NEW: General Quote Button
+    const generalQuoteBtn = document.getElementById("generalQuoteBtn");
 
     // ======= App State =======
     let ownerMode = false;
@@ -633,6 +737,7 @@
     // Lightbox Navigation State
     let currentLightboxImages = []; // Array of base64 strings for current item
     let currentLightboxIndex = 0;
+    let currentItemLabel = ""; // Store label for email subject
     
     let logoDocRef = null;
     const placeholderLogoUrl = "https://placehold.co/160x160/FFFFFF/0a3d62?text=L3D";
@@ -658,7 +763,9 @@
     function showMessage(message, title = "Notice") {
       modalTitle.textContent = title;
       modalMessage.textContent = message;
+      modalMessage.style.display = "block";
       modalInput.style.display = "none";
+      orderForm.style.display = "none"; // Hide order form
       modalCancel.style.display = "none";
       modalConfirm.textContent = "OK";
       customModal.style.display = "flex";
@@ -671,7 +778,9 @@
     function showConfirm(message, title, confirmText, callback) {
       modalTitle.textContent = title;
       modalMessage.textContent = message;
+      modalMessage.style.display = "block";
       modalInput.style.display = "none";
+      orderForm.style.display = "none"; // Hide order form
       modalCancel.style.display = "inline-block";
       modalConfirm.textContent = confirmText;
       customModal.style.display = "flex";
@@ -682,8 +791,10 @@
     function showPrompt(message, title, callback) {
       modalTitle.textContent = title;
       modalMessage.textContent = message;
+      modalMessage.style.display = "block";
       modalInput.value = "";
       modalInput.style.display = "block";
+      orderForm.style.display = "none"; // Hide order form
       modalCancel.style.display = "inline-block";
       modalConfirm.textContent = "Submit";
       customModal.style.display = "flex";
@@ -693,11 +804,39 @@
       };
     }
 
+    // NEW: Show Order Form
+    function showOrderForm(itemName, callback) {
+        modalTitle.textContent = `Order Inquiry: ${itemName}`;
+        modalMessage.style.display = "none"; // Hide standard message
+        modalInput.style.display = "none";
+        
+        // Clear form
+        orderName.value = "";
+        orderEmail.value = "";
+        orderNotes.value = "";
+        
+        orderForm.style.display = "flex"; // Show form
+        
+        modalCancel.style.display = "inline-block";
+        modalConfirm.textContent = "Draft Email";
+        customModal.style.display = "flex";
+        
+        modalConfirmCallback = () => {
+            const details = {
+                name: orderName.value,
+                email: orderEmail.value,
+                notes: orderNotes.value
+            };
+            callback(details);
+        };
+    }
+
     modalConfirm.addEventListener("click", () => {
       if (modalConfirmCallback) {
         modalConfirmCallback();
       }
-      if (modalInput.style.display === "none" && modalCancel.style.display === "none") {
+      // Only auto-close if not a form (forms close themselves or need validation)
+      if (orderForm.style.display === 'none' && modalInput.style.display === "none" && modalCancel.style.display === "none") {
          customModal.style.display = "none";
       }
     });
@@ -744,9 +883,10 @@
         
         currentLightboxImages = item.images;
         currentLightboxIndex = 0; // Start at first image
+        currentItemLabel = item.label || "Item"; // Store for order button
         
         // Set caption
-        lightboxCaption.textContent = item.label || "";
+        lightboxCaption.textContent = currentItemLabel;
         
         updateLightboxContent();
         lightbox.classList.add("active");
@@ -773,6 +913,71 @@
         currentLightboxIndex = (currentLightboxIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length;
         updateLightboxContent();
     }
+    
+    // Order Button Click (In Lightbox)
+    orderButton.addEventListener("click", () => {
+        showOrderForm(currentItemLabel, (details) => {
+            if (!details.name) {
+                alert("Please enter your name.");
+                return; // Don't close
+            }
+            
+            // Construct Mailto Link
+            const subject = encodeURIComponent(`Order Inquiry: ${currentItemLabel}`);
+            const body = encodeURIComponent(
+`Hi Levi,
+
+I am interested in ordering: ${currentItemLabel}
+
+My Name: ${details.name}
+My Email: ${details.email}
+
+Notes:
+${details.notes}
+
+-----------------------------------
+Sent from Levi 3D Print Website`
+            );
+            
+            // Explicitly tell user what's happening
+            alert("I have opened your default email app (like Mail or Outlook). Please check the draft and click Send!");
+            
+            window.location.href = `mailto:levis3dprint@gmail.com?subject=${subject}&body=${body}`;
+            customModal.style.display = "none"; // Close modal
+        });
+    });
+
+    // NEW: General Quote Button Click (In Home)
+    generalQuoteBtn.addEventListener("click", () => {
+        showOrderForm("Custom Request", (details) => {
+             if (!details.name) {
+                alert("Please enter your name.");
+                return; // Don't close
+            }
+            
+            const subject = encodeURIComponent(`Custom Order Inquiry`);
+            const body = encodeURIComponent(
+`Hi Levi,
+
+I would like to request a custom quote.
+
+My Name: ${details.name}
+My Email: ${details.email}
+
+My Request Details:
+${details.notes}
+
+-----------------------------------
+Sent from Levi 3D Print Website`
+            );
+            
+            alert("I have opened your default email app (like Mail or Outlook). Please check the draft and click Send!");
+            
+            window.location.href = `mailto:levis3dprint@gmail.com?subject=${subject}&body=${body}`;
+            customModal.style.display = "none"; 
+        });
+    });
+
     
     closeLightbox.addEventListener("click", closeLightboxModal);
     lightboxNext.addEventListener("click", nextImage);
@@ -887,8 +1092,9 @@
       let totalSize = 0;
       for (let i = 0; i < files.length; i++) totalSize += files[i].size;
       
-      if (totalSize > 800000) { // 800KB limit
-          showMessage("Total size is too large! All images combined must be under 800KB.", "Error");
+      // 1MB Limit
+      if (totalSize > 1000000) { 
+          showMessage("Total size is too large! All images combined must be under 1MB.", "Error");
           return;
       }
       
@@ -1104,8 +1310,11 @@
         }
       }, (error) => {
         console.error("Error loading logo:", error);
-        mainLogoImage.src = placeholderLogoUrl; 
-        faviconLink.href = placeholderLogoUrl;
+        // Handle permissions errors gracefully
+        if (error.code !== 'permission-denied') {
+             mainLogoImage.src = placeholderLogoUrl; 
+             faviconLink.href = placeholderLogoUrl;
+        }
       });
     }
 
