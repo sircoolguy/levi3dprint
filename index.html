@@ -5,7 +5,684 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Levi 3D Print</title>
   
-  <!-- Favicon -->
+  <!-- Favicon (Updated dynamically) -->
+  <link id="faviconLink" rel="icon" type="image/png" href="data:image/png;base64,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">
+  
+  <style>
+    /* General layout */
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      color: white;
+      background: #0a3d62; 
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 30px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo {
+      width: 160px;
+      margin-bottom: 10px;
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      aspect-ratio: 1 / 1;
+      overflow: hidden; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent; 
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    /* Tabs */
+    nav {
+      display: flex;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px 15px;
+      border-radius: 10px;
+    }
+
+    #changeLogoButton {
+      display: none; /* Hidden by default */
+      margin-bottom: 15px;
+      padding: 8px 15px;
+      background: #ffc107;
+      color: #333;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    #changeLogoButton:hover {
+      background: #e0a800;
+    }
+
+    nav .tab {
+      background: #0a3d62;
+      border: none;
+      color: white;
+      font-size: 16px;
+      padding: 8px 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    nav .tab:hover,
+    nav .tab.active {
+      background: #1e90ff;
+    }
+
+    /* Main content */
+    main {
+      text-align: center;
+      margin-top: 50px;
+      padding: 0 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    section {
+      display: none;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    section.active {
+      display: block;
+    }
+    
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+    
+    p {
+      font-size: 1.1em;
+      line-height: 1.6;
+    }
+
+    /* Gallery */
+    #gallery-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+      min-height: 150px;
+    }
+    
+    #gallery-status {
+      font-size: 1.2em;
+      color: #ffb347;
+      width: 100%;
+    }
+
+    .image-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #333;
+      cursor: pointer; 
+      transition: transform 0.3s ease;
+    }
+
+    .image-wrapper:hover {
+      transform: scale(1.05);
+    }
+
+    .image-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Label styling */
+    .image-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      font-size: 14px;
+      padding: 5px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      display: none; 
+      z-index: 5;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+    
+    .delete-btn:hover {
+      opacity: 1;
+    }
+
+    /* Upload area */
+    .upload-area {
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+    
+    .upload-inputs {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    /* Upload Progress Bar */
+    #uploadProgressBarContainer {
+        width: 100%;
+        max-width: 300px;
+        height: 10px;
+        background: #333;
+        border-radius: 5px;
+        margin-top: 10px;
+        overflow: hidden;
+        display: none;
+    }
+    
+    #uploadProgressBar {
+        width: 0%;
+        height: 100%;
+        background: #1e90ff;
+        transition: width 0.3s;
+    }
+
+    #imageLabelInput {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      width: 80%;
+      max-width: 300px;
+    }
+
+    #imageUpload, #addMoreInput {
+      display: none;
+    }
+    
+    #upload-label, #add-more-label {
+      display: none;
+      padding: 10px 15px;
+      background: #1e90ff;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    #upload-label:hover, #add-more-label:hover {
+      background: #007bff;
+    }
+
+    #add-more-label {
+      background: #28a745;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    
+    #add-more-label:hover {
+      background: #218838;
+    }
+    
+    #upload-status {
+      display: inline-block;
+      margin-left: 10px;
+      font-size: 0.9em;
+      min-height: 1.2em;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      position: relative;
+      bottom: 5px;
+      width: 100%;
+      font-size: 13px;
+      color: white;
+      margin-top: 50px;
+      padding-bottom: 10px;
+      z-index: 10;
+    }
+    
+    #userIdDisplay {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 5px;
+    }
+
+    /* Owner button - Tiny and Gray */
+    #ownerButton {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: #444; 
+      color: #aaa;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 12px; /* Tiny font */
+      cursor: pointer;
+      z-index: 1000;
+      transition: background 0.3s;
+      opacity: 0.8;
+    }
+    
+    #ownerButton:disabled {
+      background: #222;
+      cursor: not-allowed;
+    }
+    
+    #ownerButton:not(:disabled):hover {
+      background: #666;
+      color: white;
+      opacity: 1;
+    }
+    
+    /* Home Contact Button */
+    #generalQuoteBtn {
+      margin-top: 20px;
+      padding: 12px 25px;
+      background: #1e90ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #generalQuoteBtn:hover {
+      background: #007bff;
+    }
+
+
+    /* Wave background */
+    .wave {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 120%;
+      background: linear-gradient(135deg, #ff4500, #ff0000, #ff8c00, #ff6600, #ff4500);
+      background-size: 400% 400%;
+      clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+      z-index: -1;
+      animation: waveMotion 6s ease-in-out infinite alternate,
+        moveFade 15s ease-in-out infinite;
+    }
+
+    @keyframes waveMotion {
+      0% { clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%); }
+      50% { clip-path: polygon(0 0, 100% 0, 100% 92%, 0 98%); }
+      100% { clip-path: polygon(0 0, 100% 0, 100% 95%, 0 90%); }
+    }
+    
+    @keyframes moveFade {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Lightbox Styles */
+    .lightbox {
+      display: none;
+      position: fixed;
+      z-index: 3000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lightbox-content {
+      max-width: 90%;
+      max-height: 60vh;
+      object-fit: contain;
+      border: 2px solid #fff;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .lightbox-caption {
+      color: white;
+      margin-top: 5px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      min-height: 30px;
+    }
+    
+    .lightbox-desc {
+      color: #ddd;
+      margin-top: 5px;
+      font-size: 1rem;
+      text-align: center;
+      max-width: 600px;
+      padding: 0 20px;
+      white-space: pre-wrap;
+    }
+
+    .lightbox-actions {
+        margin-top: 15px;
+        text-align: center;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    #orderButton {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s;
+        text-decoration: none; 
+        display: inline-block;
+    }
+    #orderButton:hover { background: #218838; }
+    
+    /* Owner controls in Lightbox */
+    .owner-controls {
+        display: none; /* Controlled by JS */
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .owner-btn {
+        background: #ffc107;
+        color: #333;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    .owner-btn:hover { background: #e0a800; }
+    
+    .owner-btn.blue { background: #1e90ff; color: white; }
+    .owner-btn.blue:hover { background: #007bff; }
+
+    /* Order Form Modal Styling */
+    .order-form, .desc-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        text-align: left;
+        width: 100%;
+    }
+    
+    .order-form label, .desc-form label {
+        color: #ccc;
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+    
+    .order-form input, .order-form textarea, .desc-form textarea {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #555;
+        background: #333;
+        color: white;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .order-form textarea, .desc-form textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .close-lightbox {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: #f1f1f1;
+      font-size: 40px;
+      font-weight: bold;
+      transition: 0.3s;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .close-lightbox:hover {
+      color: #ff4500;
+    }
+
+    .prev, .next {
+      cursor: pointer;
+      position: absolute;
+      top: 50%;
+      width: auto;
+      padding: 16px;
+      margin-top: -50px;
+      color: white;
+      font-weight: bold;
+      font-size: 30px;
+      transition: 0.3s ease;
+      border-radius: 0 3px 3px 0;
+      user-select: none;
+    }
+
+    .next {
+      right: 0;
+      border-radius: 3px 0 0 3px;
+    }
+
+    .prev {
+      left: 0;
+      border-radius: 0 3px 3px 0;
+    }
+
+    .prev:hover, .next:hover {
+      background-color: rgba(255, 69, 0, 0.8);
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .modal-content {
+      background: #1e272e;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+    }
+    
+    .modal-content h2 { margin-top: 0; color: #fff; }
+    .modal-content p { color: #ccc; margin-bottom: 20px; }
+
+    .modal-input {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      border: 1px solid #555;
+      background: #333;
+      color: white;
+      font-size: 16px;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .modal-buttons button.confirm { background: #1e90ff; color: white; }
+    .modal-buttons button.cancel { background: #555; color: white; }
+    
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" title="Levi 3D Print">
+      <img src="https://placehold.co/160x160/FFFFFF/0a3d62?text=L3D" alt="L3D Logo" id="mainLogoImage">
+    </div>
+    <nav>
+      <button class="tab active" data-tab="home">Home</button>
+      <button class="tab" data-tab="about">About</button>
+      <button class="tab" data-tab="gallery">Gallery</button>
+    </nav>
+    <input type="file" id="logoUploadInput" accept="image/*" style="display: none;" />
+    <button id="changeLogoButton">Change Logo</button>
+  </header>
+
+  <div class="wave"></div>
+
+  <main>
+    <section id="home" class="active">
+      <h1>Welcome to Levi's custom 3d printing</h1>
+      <p>Custom 3D printed creations designed with care and creativity.
+      <br>The best part: I can customize almost everything!</p>
+      <!-- NEW: Home Button -->
+      <button id="generalQuoteBtn">Start a Custom Order</button>
+    </section>
+
+    <section id="about">
+      <h1>About Us</h1>
+      <p>At Levi 3D Print, we specialize in custom designs and innovative prints made for you.
+      <br>I can make earrings, toys, models, cars, keychains.
+      <br>Contact me on Facebook @ levi's custom 3d printing or email me at levitaba6@icloud.com</p>
+    </section>
+
+    <section id="gallery">
+      <h1>Gallery</h1>
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-inputs">
+            <!-- Label Input -->
+            <input type="text" id="imageLabelInput" placeholder="Enter item name (e.g. Red Dragon)" class="modal-input" />
+            
+            <!-- Multiple file input -->
+            <label for="imageUpload" id="upload-label">Choose Files (Select multiple)</label>
+            <input type="file" id="imageUpload" accept="image/*" multiple />
+            
+            <div id="uploadProgressBarContainer">
+                <div id="uploadProgressBar"></div>
+            </div>
+            <span id="upload-status"></span>
+        </div>
+      </div>
+      <div id="gallery-container">
+        <p id="gallery-status">Loading gallery...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Levi 3D Print. All rights reserved.</p>
+    <div id="userIdDisplay">Connecting...</div>
+  </footer>
+
+  <button id="ownerButton" disabled>Loading...</button>
+
+  <!-- Lightbox Modal -->
+  <div id="lightbox" class="lightbox">
+    <span class="close-lightbox">&times;</span>
+    <img class="lightbox-content" id="lightboxImg">
+    <div id="lightboxCaption" class="lightbox-caption"></div>
+    <div id="lightboxDesc" class="lightbox-desc"></div>
+    
+    <!-- Order Button & Owner Actions -->
+    <div class="lightbox-actions">
+        <button id="orderButton">Request Order / Quote</button>
+        
+        <!-- Owner Only Controls (Added dynamically via JS) -->
+        <div id="ownerControls" class="owner-controls">
+            <label for="addMoreInput" id="add-more-label" class="owner-btn blue">+ Add Image</label>
+            <input type="file" id="addMoreInput" accept="image/*" />
+            <button id="editDescBtn" class="owner-btn">✎ Edit Info</button>
+        </div>
+    </div>
+
+    <a class="prev" id="lightboxPrev">&#10094;</a><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Levi 3D Print</title>
+  
+  <!-- Favicon (Updated dynamically) -->
   <link id="faviconLink" rel="icon" type="image/png" href="data:image/png;base64,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">
   
   <style>
@@ -710,9 +1387,42 @@
       </div>
     </div>
   </div>
+    <a class="next" id="lightboxNext">&#10095;</a>
+  </div>
+  
+  <!-- Custom Modal -->
+  <div id="customModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 id="modalTitle">Modal Title</h2>
+      <p id="modalMessage">This is the modal message.</p>
+      
+      <!-- Regular Input (Password) -->
+      <input type="password" id="modalInput" class="modal-input" style="display: none;" />
+      
+      <!-- Order Form (Hidden by default) -->
+      <div id="orderForm" class="order-form" style="display: none;">
+          <label>Your Name:</label>
+          <input type="text" id="orderName" placeholder="John Doe" />
+          <label>Your Email (Optional):</label>
+          <input type="email" id="orderEmail" placeholder="john@example.com" />
+          <label>Notes / Customization:</label>
+          <textarea id="orderNotes" placeholder="I would like this in blue..."></textarea>
+      </div>
+      
+      <!-- Description Form (Hidden by default) -->
+      <div id="descForm" class="desc-form" style="display: none;">
+          <label>Update Description:</label>
+          <textarea id="descInput" placeholder="Enter description..."></textarea>
+      </div>
 
+      <div class="modal-buttons">
+        <button id="modalCancel" class="cancel">Cancel</button>
+        <button id="modalConfirm" class="confirm">OK</button>
+      </div>
+    </div>
+  </div>
   <!-- Firebase SDKs -->
-    <script type="module">
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { 
       getAuth, signInAnonymously, onAuthStateChanged 
@@ -734,7 +1444,6 @@
       appId: "1:1044564863427:web:37017271e5972aee7c3576",
       measurementId: "G-08JB2G438T"
     };
-    // ------------------------------------------------------------------
 
     // ======= App Elements =======
     const tabs = document.querySelectorAll(".tab");
